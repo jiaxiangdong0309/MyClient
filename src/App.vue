@@ -1,49 +1,316 @@
 <template>
-  <div class="container">
-    <header>
-      <h1>{{ title }}</h1>
-    </header>
-    <main>
-      <HelloWorld msg="欢迎使用 Vue 3!" />
-    </main>
-  </div>
+  <a-config-provider :locale="zhCN">
+    <div class="app-container">
+      <a-layout style="min-height: 100vh">
+        <!-- 侧边栏 -->
+        <a-layout-sider
+          v-model:collapsed="appStore.collapsed"
+          collapsible
+          :trigger="null"
+          :theme="appStore.theme"
+        >
+          <div class="logo">
+            <img
+              src="./assets/logo.png"
+              alt="Logo"
+              v-if="!appStore.collapsed"
+            />
+            <img src="./assets/logo-small.png" alt="Logo" v-else />
+          </div>
+          <a-menu
+            v-model:selectedKeys="selectedKeys"
+            :theme="appStore.theme"
+            mode="inline"
+          >
+            <a-menu-item
+              v-for="item in menuConfig"
+              :key="item.key"
+              @click="navigateTo(item.key)"
+            >
+              <template #icon>
+                <component :is="item.icon"></component>
+              </template>
+              <span>{{ item.title }}</span>
+            </a-menu-item>
+          </a-menu>
+        </a-layout-sider>
+
+        <a-layout>
+          <!-- 头部 -->
+          <a-layout-header class="header">
+            <div class="header-left">
+              <a-button
+                type="text"
+                @click="appStore.toggleCollapsed"
+                class="trigger-btn"
+              >
+                <menu-unfold-outlined v-if="appStore.collapsed" />
+                <menu-fold-outlined v-else />
+              </a-button>
+              <a-breadcrumb>
+                <a-breadcrumb-item>首页</a-breadcrumb-item>
+                <a-breadcrumb-item>{{
+                  getCurrentPageTitle()
+                }}</a-breadcrumb-item>
+              </a-breadcrumb>
+            </div>
+            <div class="header-right">
+              <a-space>
+                <a-badge :count="appStore.unreadNotificationCount">
+                  <a-button type="text" shape="circle">
+                    <template #icon><bell-outlined /></template>
+                  </a-button>
+                </a-badge>
+                <a-dropdown>
+                  <a class="user-dropdown">
+                    <a-avatar>
+                      <template #icon><user-outlined /></template>
+                    </a-avatar>
+                    <span class="username">{{
+                      appStore.userInfo?.name || "管理员"
+                    }}</span>
+                  </a>
+                  <template #overlay>
+                    <a-menu>
+                      <a-menu-item key="profile">
+                        <user-outlined />
+                        个人资料
+                      </a-menu-item>
+                      <a-menu-item key="settings">
+                        <setting-outlined />
+                        账号设置
+                      </a-menu-item>
+                      <a-menu-divider />
+                      <a-menu-item key="logout" @click="handleLogout">
+                        <logout-outlined />
+                        退出登录
+                      </a-menu-item>
+                    </a-menu>
+                  </template>
+                </a-dropdown>
+                <a-button type="text" @click="appStore.toggleTheme">
+                  <template #icon>
+                    <bulb-outlined />
+                  </template>
+                </a-button>
+              </a-space>
+            </div>
+          </a-layout-header>
+
+          <!-- 内容区 -->
+          <a-layout-content class="content">
+            <div class="content-wrapper">
+              <!-- 路由视图 -->
+              <router-view v-slot="{ Component, route }">
+                <a-card :title="route.meta.title">
+                  <component :is="Component" v-bind="route.meta.props" />
+                </a-card>
+              </router-view>
+            </div>
+          </a-layout-content>
+
+          <!-- 底部 -->
+          <a-layout-footer class="footer">
+            <div>管理系统 ©2023 Created by Your Company</div>
+          </a-layout-footer>
+        </a-layout>
+      </a-layout>
+    </div>
+  </a-config-provider>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+import { ref, reactive, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { message } from "ant-design-vue";
+import { useAppStore } from "./stores/app";
+import zhCN from "ant-design-vue/es/locale/zh_CN";
+import menuConfig from "./config/menu";
+import {
+  UserOutlined,
+  SmileOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  BellOutlined,
+  LogoutOutlined,
+  BulbOutlined,
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  InfoCircleOutlined,
+} from "@ant-design/icons-vue";
 
 export default {
   name: "App",
   components: {
-    HelloWorld,
+    UserOutlined,
+    SmileOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+    BellOutlined,
+    LogoutOutlined,
+    BulbOutlined,
+    PlusOutlined,
+    EditOutlined,
+    DeleteOutlined,
+    InfoCircleOutlined,
   },
-  data() {
+  setup() {
+    const router = useRouter();
+    const route = useRoute();
+    const appStore = useAppStore();
+
+    // 侧边栏状态
+    const selectedKeys = ref([route.name || "users"]);
+
+    // 监听路由变化，更新选中的菜单项
+    watch(
+      () => route.name,
+      (newName) => {
+        if (newName) {
+          selectedKeys.value = [newName];
+        }
+      }
+    );
+
+    // 加载状态
+    const loading = ref(false);
+
+    // 导航到指定路由
+    const navigateTo = (key) => {
+      router.push(`/${key}`);
+    };
+
+    // 处理退出登录
+    const handleLogout = () => {
+      appStore.logout();
+      message.success("退出登录成功");
+      router.push("/users");
+    };
+
+    // 获取当前页面标题
+    const getCurrentPageTitle = () => {
+      return route.meta.title || "管理系统";
+    };
+
+    // 模拟添加通知
+    setTimeout(() => {
+      appStore.addNotification({
+        title: "系统通知",
+        content: "欢迎使用管理系统",
+      });
+    }, 2000);
+
     return {
-      title: "Vue 3 应用",
+      zhCN,
+      selectedKeys,
+      loading,
+      menuConfig,
+      appStore,
+      navigateTo,
+      handleLogout,
+      getCurrentPageTitle,
     };
   },
 };
 </script>
 
 <style>
-.container {
+/* 全局样式 */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+}
+
+/* Logo样式 */
+.logo {
+  height: 64px;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 16px;
+  border-radius: var(--border-radius-lg);
+}
+
+.logo img {
+  height: 32px;
+}
+
+/* 头部样式 */
+.header {
+  background: var(--component-background);
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  z-index: 1;
+}
+
+.header-left {
+  display: flex;
   align-items: center;
 }
 
-header {
-  margin-bottom: 2rem;
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.trigger-btn {
+  font-size: 18px;
+  margin-right: 16px;
+}
+
+.user-dropdown {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.username {
+  margin-left: 8px;
+  color: var(--text-color);
+}
+
+/* 内容区样式 */
+.content {
+  margin: 16px;
+  overflow: initial;
+}
+
+.content-wrapper {
+  padding: 16px;
+  background: var(--component-background);
+  min-height: 280px;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--box-shadow-sm);
+}
+
+/* 底部样式 */
+.footer {
   text-align: center;
+  color: var(--text-color-secondary);
+  font-size: var(--font-size-base);
+  padding: 16px 50px;
 }
 
-h1 {
-  color: #41b883;
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+/* 表格操作按钮样式 */
+.ant-table-tbody .ant-btn-link {
+  padding: 0 8px;
 }
 
-main {
-  width: 100%;
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .content {
+    margin: 8px;
+  }
+
+  .content-wrapper {
+    padding: 8px;
+  }
 }
 </style>

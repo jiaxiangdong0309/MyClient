@@ -1,0 +1,77 @@
+:root {
+  /* 主题颜色 - 亮色模式 */
+  --primary-color: #1890ff;
+  --primary-color-hover: #40a9ff;
+  --primary-color-active: #096dd9;
+  --primary-color-outline: rgba(24, 144, 255, 0.2);
+  --primary-1: #e6f7ff;
+  --primary-2: #bae7ff;
+  --primary-3: #91d5ff;
+  --primary-4: #69c0ff;
+  --primary-5: #40a9ff;
+  --primary-6: #1890ff;
+  --primary-7: #096dd9;
+
+  /* 功能色 */
+  --success-color: #52c41a;
+  --warning-color: #faad14;
+  --error-color: #f5222d;
+  --info-color: #1890ff;
+
+  /* 中性色 */
+  --heading-color: rgba(0, 0, 0, 0.85);
+  --text-color: rgba(0, 0, 0, 0.65);
+  --text-color-secondary: rgba(0, 0, 0, 0.45);
+  --disabled-color: rgba(0, 0, 0, 0.25);
+  --border-color: #d9d9d9;
+  --divider-color: rgba(0, 0, 0, 0.06);
+  --background-color: #f0f2f5;
+  --component-background: #fff;
+  --item-hover-bg: #f5f5f5;
+  --item-active-bg: #e6f7ff;
+
+  /* 字体 */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --font-size-base: 14px;
+  --font-size-sm: 12px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --font-size-xxl: 24px;
+
+  /* 行高 */
+  --line-height-base: 1.5715;
+
+  /* 圆角 */
+  --border-radius-base: 2px;
+  --border-radius-sm: 2px;
+  --border-radius-lg: 4px;
+
+  /* 阴影 */
+  --box-shadow-base: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  --box-shadow-sm: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
+
+  /* 动画 */
+  --animation-duration-base: 0.2s;
+  --animation-duration-slow: 0.3s;
+  --animation-duration-fast: 0.1s;
+}
+
+/* 暗色主题 */
+[data-theme='dark'] {
+  --primary-color: #177ddc;
+  --primary-color-hover: #165996;
+  --primary-color-active: #388ed3;
+  --primary-color-outline: rgba(23, 125, 220, 0.2);
+
+  /* 中性色 */
+  --heading-color: rgba(255, 255, 255, 0.85);
+  --text-color: rgba(255, 255, 255, 0.65);
+  --text-color-secondary: rgba(255, 255, 255, 0.45);
+  --disabled-color: rgba(255, 255, 255, 0.25);
+  --border-color: #434343;
+  --divider-color: rgba(255, 255, 255, 0.06);
+  --background-color: #141414;
+  --component-background: #1f1f1f;
+  --item-hover-bg: rgba(255, 255, 255, 0.08);
+  --item-active-bg: #177ddc;
+}
