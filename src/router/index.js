@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import menuConfig from "../config/menu";
 
 // 根据菜单配置生成路由
@@ -26,7 +26,7 @@ routes.push({
 });
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes,
 });
 
