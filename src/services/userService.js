@@ -48,13 +48,20 @@ export const createUserService = (httpClient = http) => {
     },
 
     /**
-     * 获取用户列表
-     * @param {Object} params 查询参数
-     * @param {Object} config 请求配置
-     * @returns {Promise} 用户列表
+     * 获取所有用户
+     * @returns {Promise} 返回包含所有用户的列表，每个用户包含id、name和phone字段
      */
-    getUsers: (params, config) => {
-      return httpClient.get("/users", params, config);
+    getUsers: () => {
+      return httpClient.get("/api/users");
+    },
+
+    /**
+     * 创建新用户
+     * @param {Object} userData 用户数据，包含name和phone字段
+     * @returns {Promise} 创建结果
+     */
+    createUser: (userData) => {
+      return httpClient.post("/api/users", userData);
     },
 
     /**

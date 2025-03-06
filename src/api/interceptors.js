@@ -4,6 +4,7 @@
 import axios from "axios";
 import { handleApiError, isRetryable } from "./errorHandler";
 import { API_CONFIG } from "./config";
+import { message } from "ant-design-vue"; // 导入ant-design-vue的message组件
 
 // 简单的内存缓存
 const apiCache = new Map();
@@ -164,6 +165,25 @@ export const setupResponseInterceptor = (instance) => {
         setCache(config.__cacheKey, response.data, maxAge);
       }
 
+      // 处理标准API响应格式
+      const responseData = response.data;
+      if (responseData && typeof responseData === "object") {
+        // 检查是否符合标准响应格式 {code, message, data, timestamp}
+        if ("code" in responseData && "message" in responseData) {
+          // 成功状态码通常为200
+          if (responseData.code === 200) {
+            // 直接返回data字段的数据
+            return Promise.resolve(responseData.data);
+          } else {
+            // 非成功状态，显示错误消息
+            message.error(responseData.message || "操作失败");
+            return Promise.reject(
+              new Error(responseData.message || "操作失败")
+            );
+          }
+        }
+      }
+
       return response;
     },
     async (error) => {
@@ -202,6 +222,22 @@ export const setupResponseInterceptor = (instance) => {
         // 延迟后重试
         await new Promise((resolve) => setTimeout(resolve, delay));
         return instance(config);
+      }
+
+      // 处理错误响应
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        // 检查是否符合标准响应格式
+        if (errorData.code !== undefined && errorData.message) {
+          // 显示错误消息
+          message.error(errorData.message || "请求失败");
+        } else {
+          // 其他错误类型
+          message.error(error.message || "网络请求失败");
+        }
+      } else {
+        // 其他错误类型
+        message.error(error.message || "网络请求失败");
       }
 
       // 处理错误

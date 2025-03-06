@@ -14,9 +14,9 @@ const currentEnv = process.env.NODE_ENV || ENV.DEV;
 
 // 不同环境的基础URL
 const BASE_URLS = {
-  [ENV.DEV]: "http://localhost:3000/api",
-  [ENV.TEST]: "http://test-api.example.com/api",
-  [ENV.PROD]: "https://api.example.com/api",
+  [ENV.DEV]: "https://myserver-egzl.onrender.com/api",
+  [ENV.TEST]: "https://myserver-egzl.onrender.com/api",
+  [ENV.PROD]: "https://myserver-egzl.onrender.com/api",
 };
 
 // 导出配置

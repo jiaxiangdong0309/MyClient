@@ -118,7 +118,8 @@ export const request = async (config) => {
   try {
     const response = await http(configWithToken);
     removeCancelToken(configWithToken.requestId);
-    return response.data;
+    // 直接返回响应数据，因为拦截器已经处理了标准响应格式
+    return response;
   } catch (error) {
     removeCancelToken(configWithToken.requestId);
     throw error;
