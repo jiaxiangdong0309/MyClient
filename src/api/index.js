@@ -20,7 +20,7 @@ import services, {
   createUserService,
   createProductService,
   createServices,
-} from "./services";
+} from "../services";
 
 // 导出API服务
 export const apiService = services;

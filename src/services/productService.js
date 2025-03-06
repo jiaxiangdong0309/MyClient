@@ -1,7 +1,7 @@
 /**
  * 产品服务模块
  */
-import http from "../http";
+import http from "../api/http";
 
 /**
  * 创建产品服务

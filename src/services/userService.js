@@ -1,7 +1,7 @@
 /**
  * 用户服务模块
  */
-import http from "../http";
+import http from "../api/http";
 
 /**
  * 创建用户服务

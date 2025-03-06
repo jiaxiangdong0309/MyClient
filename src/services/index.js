@@ -3,7 +3,7 @@
  */
 import userService, { createUserService } from "./userService";
 import productService, { createProductService } from "./productService";
-import http from "../http";
+import http from "../api/http";
 
 /**
  * 创建所有服务
