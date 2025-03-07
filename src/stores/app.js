@@ -23,8 +23,8 @@ export const useAppStore = defineStore("app", {
   },
 
   actions: {
-    toggleTheme() {
-      this.theme = this.theme === "dark" ? "light" : "dark";
+    toggleTheme(color) {
+      this.theme = color;
       localStorage.setItem("theme", this.theme);
 
       // 设置HTML的data-theme属性

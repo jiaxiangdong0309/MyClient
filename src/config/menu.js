@@ -3,14 +3,9 @@
  */
 import UserList from "../components/UserList.vue";
 import HelloWorld from "../components/HelloWorld.vue";
+import Setting from "../components/Setting.vue";
 
 export const menuConfig = [
-  {
-    key: "users",
-    title: "用户管理",
-    icon: "user-outlined",
-    component: UserList,
-  },
   {
     key: "hello",
     title: "Hello",
@@ -21,12 +16,18 @@ export const menuConfig = [
     },
   },
   {
+    key: "users",
+    title: "用户管理",
+    icon: "user-outlined",
+    component: UserList,
+  },
+  {
     key: "about",
-    title: "关于系统",
+    title: "设置",
     icon: "info-circle-outlined",
-    component: HelloWorld,
+    component: Setting,
     props: {
-      msg: "关于管理系统",
+      msg: "设置",
     },
   },
 ];
