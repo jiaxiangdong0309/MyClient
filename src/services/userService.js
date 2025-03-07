@@ -11,48 +11,21 @@ import http from "../api/http";
 export const createUserService = (httpClient = http) => {
   return {
     /**
-     * 用户登录
-     * @param {Object} credentials 登录凭证
-     * @returns {Promise} 登录结果
-     */
-    login: (credentials) => {
-      return httpClient.post("/auth/login", credentials);
-    },
-
-    /**
-     * 用户注册
-     * @param {Object} userData 用户数据
-     * @returns {Promise} 注册结果
-     */
-    register: (userData) => {
-      return httpClient.post("/auth/register", userData);
-    },
-
-    /**
-     * 获取用户信息
-     * @param {string} userId 用户ID
-     * @returns {Promise} 用户信息
-     */
-    getUserInfo: (userId) => {
-      return httpClient.get(`/users/${userId}`);
-    },
-
-    /**
-     * 更新用户信息
-     * @param {string} userId 用户ID
-     * @param {Object} userData 用户数据
-     * @returns {Promise} 更新结果
-     */
-    updateUserInfo: (userId, userData) => {
-      return httpClient.put(`/users/${userId}`, userData);
-    },
-
-    /**
      * 获取所有用户
+     * @param {Object} params 查询参数
+     * @param {Object} config 请求配置
      * @returns {Promise} 返回包含所有用户的列表，每个用户包含id、name和phone字段
      */
-    getUsers: () => {
-      return httpClient.get("/api/users");
+    getUsers: (params = {}, config = {}) => {
+      return httpClient.get("/users", "", {
+        // 添加特定的重试配置
+        // retry: {
+        //   maxRetries: 3,
+        //   retryDelay: 2000,
+        //   retryStatusCodes: [408, 429, 500, 502, 503, 504],
+        // },
+        ...config,
+      });
     },
 
     /**
@@ -61,7 +34,7 @@ export const createUserService = (httpClient = http) => {
      * @returns {Promise} 创建结果
      */
     createUser: (userData) => {
-      return httpClient.post("/api/users", userData);
+      return httpClient.post("/users", userData);
     },
 
     /**

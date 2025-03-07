@@ -7,6 +7,7 @@ import {
   setupRequestInterceptor,
   setupResponseInterceptor,
 } from "./interceptors";
+import { fetchWithCorsProxy } from "../utils/corsProxy";
 
 // 创建取消令牌源映射
 const cancelTokenSources = new Map();
@@ -116,6 +117,40 @@ export const request = async (config) => {
   const configWithToken = addCancelToken(config);
 
   try {
+    // 检查是否需要使用 CORS 代理
+    if (
+      configWithToken.headers &&
+      configWithToken.headers["X-Need-CORS-Proxy"] === "true"
+    ) {
+      // 删除标记头
+      delete configWithToken.headers["X-Need-CORS-Proxy"];
+
+      // 构建完整 URL
+      const fullUrl = configWithToken.baseURL
+        ? `${configWithToken.baseURL}${configWithToken.url}`
+        : configWithToken.url;
+
+      // 转换 Axios 配置为 fetch 选项
+      const fetchOptions = {
+        method: configWithToken.method.toUpperCase(),
+        headers: configWithToken.headers,
+        body: configWithToken.data
+          ? JSON.stringify(configWithToken.data)
+          : undefined,
+      };
+
+      // 使用 CORS 代理发送请求
+      const response = await fetchWithCorsProxy(fullUrl, fetchOptions);
+      const data = await response.json();
+
+      // 移除取消令牌
+      removeCancelToken(configWithToken.requestId);
+
+      // 返回数据
+      return data;
+    }
+
+    // 正常发送请求
     const response = await http(configWithToken);
     removeCancelToken(configWithToken.requestId);
     // 直接返回响应数据，因为拦截器已经处理了标准响应格式

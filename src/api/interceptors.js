@@ -5,6 +5,7 @@ import axios from "axios";
 import { handleApiError, isRetryable } from "./errorHandler";
 import { API_CONFIG } from "./config";
 import { message } from "ant-design-vue"; // 导入ant-design-vue的message组件
+import { shouldUseCorsProxy } from "../utils/corsProxy";
 
 // 简单的内存缓存
 const apiCache = new Map();
@@ -87,6 +88,14 @@ export const setupRequestInterceptor = (instance) => {
         config.headers.Authorization = `Bearer ${token}`;
       }
 
+      // 检查是否需要使用 CORS 代理
+      const fullUrl = config.baseURL
+        ? `${config.baseURL}${config.url}`
+        : config.url;
+      if (shouldUseCorsProxy(fullUrl)) {
+        config.headers["X-Need-CORS-Proxy"] = "true";
+      }
+
       // 检查是否启用缓存
       if (
         config.cache?.enable ||
@@ -115,17 +124,6 @@ export const setupRequestInterceptor = (instance) => {
         config.__cacheKey = cacheKey;
       }
 
-      // 记录请求日志
-      if (API_CONFIG.enableLog) {
-        console.log(
-          `[API Request] ${config.method.toUpperCase()} ${config.url}`,
-          {
-            params: config.params,
-            data: config.data,
-          }
-        );
-      }
-
       return config;
     },
     (error) => {
@@ -147,16 +145,6 @@ export const setupResponseInterceptor = (instance) => {
         const endTime = new Date();
         const duration = endTime - config.metadata.startTime;
         response.duration = duration;
-
-        // 记录响应日志
-        if (API_CONFIG.enableLog && !response.__fromCache) {
-          console.log(
-            `[API Response] ${config.method.toUpperCase()} ${
-              config.url
-            } (${duration}ms)`,
-            response.data
-          );
-        }
       }
 
       // 缓存响应数据
@@ -168,14 +156,10 @@ export const setupResponseInterceptor = (instance) => {
       // 处理标准API响应格式
       const responseData = response.data;
       if (responseData && typeof responseData === "object") {
-        // 检查是否符合标准响应格式 {code, message, data, timestamp}
         if ("code" in responseData && "message" in responseData) {
-          // 成功状态码通常为200
           if (responseData.code === 200) {
-            // 直接返回data字段的数据
             return Promise.resolve(responseData.data);
           } else {
-            // 非成功状态，显示错误消息
             message.error(responseData.message || "操作失败");
             return Promise.reject(
               new Error(responseData.message || "操作失败")
@@ -190,6 +174,8 @@ export const setupResponseInterceptor = (instance) => {
       // 获取配置和重试次数
       const { config } = error;
       if (!config) {
+        console.error("[API Error] 无请求配置信息:", error);
+        message.error("网络请求失败，请检查网络连接");
         return Promise.reject(error);
       }
 
@@ -199,6 +185,14 @@ export const setupResponseInterceptor = (instance) => {
       // 检查是否可以重试
       const retryConfig = config.retry || API_CONFIG.retry;
       const { maxRetries, retryDelay, retryStatusCodes } = retryConfig;
+
+      // 记录详细的错误信息
+      console.error("[API Error] 详细错误信息:", {
+        url: config.url,
+        method: config.method,
+        error: error.message,
+        response: error.response,
+      });
 
       if (
         config.__retryCount < maxRetries &&
@@ -211,13 +205,11 @@ export const setupResponseInterceptor = (instance) => {
         const delay = retryDelay * Math.pow(2, config.__retryCount - 1);
 
         // 记录重试日志
-        if (API_CONFIG.enableLog) {
-          console.log(
-            `[API Retry] ${config.method.toUpperCase()} ${
-              config.url
-            } - Attempt ${config.__retryCount}/${maxRetries} after ${delay}ms`
-          );
-        }
+        console.log(
+          `[API Retry] ${config.method.toUpperCase()} ${config.url} - 重试 ${
+            config.__retryCount
+          }/${maxRetries}`
+        );
 
         // 延迟后重试
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -227,20 +219,15 @@ export const setupResponseInterceptor = (instance) => {
       // 处理错误响应
       if (error.response && error.response.data) {
         const errorData = error.response.data;
-        // 检查是否符合标准响应格式
         if (errorData.code !== undefined && errorData.message) {
-          // 显示错误消息
           message.error(errorData.message || "请求失败");
         } else {
-          // 其他错误类型
           message.error(error.message || "网络请求失败");
         }
       } else {
-        // 其他错误类型
-        message.error(error.message || "网络请求失败");
+        message.error("网络连接失败，请检查网络设置或稍后重试");
       }
 
-      // 处理错误
       return Promise.reject(handleApiError(error));
     }
   );

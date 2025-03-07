@@ -1,7 +1,40 @@
 <template>
   <div class="user-list">
-    <h2>用户列表</h2>
+    <!-- 添加用户表单 -->
+    <div class="add-user">
+      <form @submit.prevent="submitUser">
+        <div class="form-group">
+          <label for="username">用户名</label>
+          <input
+            id="username"
+            v-model="newUser.username"
+            type="text"
+            required
+          />
+        </div>
 
+        <div class="form-group">
+          <label for="phone">手机号</label>
+          <input id="phone" v-model="newUser.phone" type="text" required />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" :disabled="submitting">
+            {{ submitting ? "提交中..." : "添加用户" }}
+          </button>
+        </div>
+      </form>
+    </div>
+    <div class="list-header">
+      <div class="user-list-title">当前用户列表</div>
+      <button
+        class="refresh-btn"
+        @click="fetchUsers(currentPage)"
+        :disabled="loading"
+      >
+        {{ loading ? "刷新中..." : "刷新" }}
+      </button>
+    </div>
     <!-- 加载状态 -->
     <div v-if="loading" class="loading">加载中...</div>
 
@@ -13,13 +46,19 @@
 
     <!-- 用户列表 -->
     <div v-if="!loading && !error" class="users">
-      <div v-if="users.length === 0" class="empty">暂无用户数据</div>
+      <div v-if="users.length === 0" class="empty">
+        暂无用户数据 ({{ loading ? "加载中" : "空列表" }})
+      </div>
 
       <ul v-else>
-        <li v-for="user in users" :key="user.id" class="user-item">
+        <li
+          v-for="(user, index) in users"
+          :key="user.id || index"
+          class="user-item"
+        >
           <div class="user-info">
-            <h3>{{ user.name }}</h3>
-            <p>{{ user.email }}</p>
+            <h3>{{ user.username }}</h3>
+            <p>{{ user.phone }}</p>
           </div>
           <div class="user-actions">
             <button @click="viewUser(user.id)">查看</button>
@@ -46,33 +85,11 @@
         </button>
       </div>
     </div>
-
-    <!-- 添加用户表单 -->
-    <div class="add-user">
-      <h3>添加用户</h3>
-      <form @submit.prevent="submitUser">
-        <div class="form-group">
-          <label for="name">姓名</label>
-          <input id="name" v-model="newUser.name" type="text" required />
-        </div>
-
-        <div class="form-group">
-          <label for="email">邮箱</label>
-          <input id="email" v-model="newUser.email" type="email" required />
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" :disabled="submitting">
-            {{ submitting ? "提交中..." : "添加用户" }}
-          </button>
-        </div>
-      </form>
-    </div>
   </div>
 </template>
 
 <script>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, nextTick } from "vue";
 import { apiService, cancelRequest } from "../api";
 
 export default {
@@ -90,8 +107,8 @@ export default {
 
     // 新用户表单
     const newUser = reactive({
-      name: "",
-      email: "",
+      username: "",
+      phone: "",
     });
 
     // 获取用户列表
@@ -100,22 +117,39 @@ export default {
       error.value = null;
 
       try {
-        // 使用自定义请求ID，方便取消
         const result = await apiService.user.getUsers(
           {
             page,
             limit: pageSize,
+            _t: Date.now(),
           },
           {
-            requestId: "fetch-users",
+            cache: {
+              enable: false,
+            },
+            requestId: `getUsers_${Date.now()}`,
           }
         );
 
-        users.value = result.data || [];
-        totalPages.value = Math.ceil((result.total || 0) / pageSize);
+        if (!result) {
+          console.warn("API返回结果为空");
+          return;
+        }
+
+        // 确保 result 是数组
+        if (Array.isArray(result)) {
+          users.value = [...result];
+        } else if (result && Array.isArray(result.data)) {
+          users.value = [...result.data];
+          totalPages.value = Math.ceil((result.total || 0) / pageSize);
+        } else {
+          console.error("返回的数据格式不正确:", result);
+          users.value = [];
+        }
+
         currentPage.value = page;
       } catch (err) {
-        // 如果不是取消请求的错误，则设置错误状态
+        console.error("获取用户列表失败:", err);
         if (err.type !== "CANCEL_ERROR") {
           error.value = err;
         }
@@ -167,17 +201,19 @@ export default {
       submitting.value = true;
 
       try {
-        await apiService.user.register(newUser);
+        const result = await apiService.user.createUser(newUser);
 
         // 重置表单
-        newUser.name = "";
-        newUser.email = "";
+        newUser.username = "";
+        newUser.phone = "";
 
-        // 刷新用户列表
-        fetchUsers(1);
+        // 延迟500ms后刷新用户列表
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await fetchUsers(currentPage.value);
 
         alert("用户添加成功！");
       } catch (err) {
+        console.error("添加用户失败:", err);
         alert(`添加用户失败: ${err.message}`);
       } finally {
         submitting.value = false;
@@ -210,9 +246,15 @@ export default {
 
 <style scoped>
 .user-list {
-  max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 0px;
+}
+
+.user-list-title {
+  font-weight: bold;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  border-bottom: 1px solid #eee;
 }
 
 .loading,
@@ -291,30 +333,41 @@ export default {
 }
 
 .add-user {
-  margin-top: 30px;
-  padding: 20px;
-  border-top: 1px solid #eee;
+  padding: 0px;
+}
+
+.add-user form {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
+  width: auto;
 }
 
 .form-group input {
-  width: 100%;
+  width: 200px;
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
 .form-actions {
-  margin-top: 20px;
+  margin-top: 0;
+  display: flex;
+  align-items: flex-end;
 }
 
 .form-actions button {
@@ -328,6 +381,26 @@ export default {
 
 .form-actions button:disabled {
   opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.refresh-btn {
+  padding: 5px 15px;
+  border: none;
+  border-radius: 4px;
+  background-color: #e0e0e0;
+  cursor: pointer;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 </style>
