@@ -70,8 +70,8 @@
   --disabled-color: rgba(255, 255, 255, 0.25);
   --border-color: #434343;
   --divider-color: rgba(255, 255, 255, 0.06);
-  --background-color: #141414;
-  --component-background: #1f1f1f;
-  --item-hover-bg: rgba(255, 255, 255, 0.08);
+  --background-color: #f0f5ff;
+  --component-background: #404142;
+  --item-hover-bg: rgba(24, 144, 255, 0.1);
   --item-active-bg: #177ddc;
 }

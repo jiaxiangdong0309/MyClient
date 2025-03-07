@@ -37,7 +37,7 @@
 
         <a-layout>
           <!-- 头部 -->
-          <a-layout-header class="header">
+          <a-layout-header class="header" :theme="appStore.theme">
             <div class="header-left">
               <a-button
                 type="text"
@@ -53,47 +53,6 @@
                   getCurrentPageTitle()
                 }}</a-breadcrumb-item>
               </a-breadcrumb>
-            </div>
-            <div class="header-right">
-              <a-space>
-                <a-badge :count="appStore.unreadNotificationCount">
-                  <a-button type="text" shape="circle">
-                    <template #icon><bell-outlined /></template>
-                  </a-button>
-                </a-badge>
-                <a-dropdown>
-                  <a class="user-dropdown">
-                    <a-avatar>
-                      <template #icon><user-outlined /></template>
-                    </a-avatar>
-                    <span class="username">{{
-                      appStore.userInfo?.name || "管理员"
-                    }}</span>
-                  </a>
-                  <template #overlay>
-                    <a-menu>
-                      <a-menu-item key="profile">
-                        <user-outlined />
-                        个人资料
-                      </a-menu-item>
-                      <a-menu-item key="settings">
-                        <setting-outlined />
-                        账号设置
-                      </a-menu-item>
-                      <a-menu-divider />
-                      <a-menu-item key="logout" @click="handleLogout">
-                        <logout-outlined />
-                        退出登录
-                      </a-menu-item>
-                    </a-menu>
-                  </template>
-                </a-dropdown>
-                <a-button type="text" @click="appStore.toggleTheme">
-                  <template #icon>
-                    <bulb-outlined />
-                  </template>
-                </a-button>
-              </a-space>
             </div>
           </a-layout-header>
 
@@ -239,15 +198,36 @@ body {
   height: 32px;
 }
 
+/* 侧边栏样式覆盖 */
+.ant-layout-sider.ant-layout-sider-dark {
+  background: var(--component-background) !important;
+}
+
+.ant-menu.ant-menu-dark {
+  background: var(--component-background) !important;
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: var(--item-active-bg) !important;
+}
+
 /* 头部样式 */
 .header {
-  background: var(--component-background);
   padding: 0 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
   z-index: 1;
+  color: var(--text-color);
+  background: var(--component-background) !important;
+}
+
+.header .ant-breadcrumb > span:last-child,
+.header .ant-breadcrumb-link,
+.header .ant-breadcrumb-separator,
+.header .trigger-btn {
+  color: var(--text-color);
 }
 
 .header-left {
